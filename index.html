@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Disaster-Aware Travel Radar</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #171a21;
+    --panel-2: #1e222b;
+    --line: #2a2f3a;
+    --text: #e6e8ec;
+    --muted: #9aa1ad;
+    --accent: #4f9cf9;
+    --warn: #f5a623;
+    --danger: #ff5c5c;
+    --ok: #3ecf8e;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+  header {
+    padding: 28px 20px 20px;
+    border-bottom: 1px solid var(--line);
+    max-width: 860px;
+    margin: 0 auto;
+  }
+  header h1 { margin: 0 0 6px; font-size: 22px; font-weight: 600; }
+  header p { margin: 0; color: var(--muted); font-size: 14px; }
+  main { max-width: 860px; margin: 0 auto; padding: 20px; }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 18px;
+    margin-bottom: 18px;
+  }
+  .card h2 { margin: 0 0 12px; font-size: 15px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+  label { display: block; font-size: 13px; color: var(--muted); margin: 0 0 4px; }
+  input, textarea {
+    width: 100%;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font: inherit;
+  }
+  textarea { min-height: 120px; resize: vertical; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; }
+  .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: end; margin-bottom: 12px; }
+  .row > div { flex: 1; min-width: 140px; }
+  button {
+    background: var(--accent);
+    color: #06121f;
+    border: 0;
+    border-radius: 8px;
+    padding: 11px 18px;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  button.secondary { background: var(--panel-2); color: var(--text); border: 1px solid var(--line); }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  .hint { font-size: 12px; color: var(--muted); margin-top: 8px; }
+  .status { font-size: 13px; color: var(--muted); margin: 10px 0 0; min-height: 18px; }
+  .alert {
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--warn);
+    background: var(--panel-2);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+  }
+  .alert.sev-danger { border-left-color: var(--danger); }
+  .alert.sev-warn { border-left-color: var(--warn); }
+  .alert .top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .alert .flag { font-size: 22px; }
+  .alert .mag {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    padding: 2px 8px;
+    border-radius: 6px;
+    background: rgba(245,166,35,.15);
+    color: var(--warn);
+  }
+  .alert.sev-danger .mag { background: rgba(255,92,92,.15); color: var(--danger); }
+  .alert .place { font-weight: 600; }
+  .alert .meta { color: var(--muted); font-size: 13px; margin-top: 6px; }
+  .alert .meta a { color: var(--accent); }
+  .alert .emergency { margin-top: 8px; font-size: 13px; }
+  .alert .emergency span { display: inline-block; margin-right: 14px; }
+  .clear-note { color: var(--ok); font-size: 14px; }
+  .stop-clear { border-left-color: var(--line); }
+  .stop-clear .place-line { color: var(--muted); }
+  footer { max-width: 860px; margin: 0 auto; padding: 20px; color: var(--muted); font-size: 12px; border-top: 1px solid var(--line); }
+  footer a { color: var(--accent); }
+  code { background: var(--panel-2); padding: 1px 5px; border-radius: 4px; font-size: 12px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🌍 Disaster-Aware Travel Radar</h1>
+  <p>Enter your itinerary. It checks USGS earthquake data against each stop's location and dates, and surfaces only quakes that actually overlap your trip — with local emergency numbers attached.</p>
+</header>
+
+<main>
+  <div class="card">
+    <h2>Your itinerary</h2>
+    <label for="itin">One stop per line: <code>Place; arrive YYYY-MM-DD; depart YYYY-MM-DD</code></label>
+    <textarea id="itin" spellcheck="false">Tokyo, Japan; 2026-09-10; 2026-09-15
+Mexico City, Mexico; 2026-09-16; 2026-09-20
+Reykjavik, Iceland; 2026-09-21; 2026-09-25</textarea>
+    <div class="hint">Dates optional — leave them off (<code>Place</code> only) to scan the next 30 days. Geocoding is throttled to 1 request/sec per Nominatim's usage policy, so multi-stop scans take a few seconds.</div>
+    <div class="row" style="margin-top:14px;">
+      <div>
+        <label for="minmag">Minimum magnitude</label>
+        <input id="minmag" type="number" step="0.1" value="4.5">
+      </div>
+      <div>
+        <label for="radius">Alert radius (km)</label>
+        <input id="radius" type="number" step="10" value="300">
+      </div>
+      <div style="flex:0 0 auto; align-self:end;">
+        <button id="run">Scan itinerary</button>
+      </div>
+    </div>
+    <p class="status" id="status"></p>
+  </div>
+
+  <div id="results"></div>
+</main>
+
+<footer>
+  Data: <a href="https://earthquake.usgs.gov/fdsnws/event/1/" target="_blank" rel="noopener">USGS Earthquake FDSN</a> ·
+  Geocoding © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors via <a href="https://nominatim.org/" target="_blank" rel="noopener">Nominatim</a> ·
+  Country data <a href="https://restcountries.com/" target="_blank" rel="noopener">REST Countries</a>.
+  Emergency numbers are a bundled best-effort dataset — <strong>always verify locally</strong>; in a real emergency call the number posted where you are.
+</footer>
+
+<script>
+// ---------- Bundled emergency numbers (best-effort; REST Countries doesn't carry these) ----------
+// Keyed by ISO alpha-2. { g: general/all-in-one, p: police, a: ambulance, f: fire }
+const EMERGENCY = {
+  JP: { p: "110", a: "119", f: "119" },
+  MX: { g: "911" },
+  IS: { g: "112" },
+  US: { g: "911" },
+  CA: { g: "911" },
+  GB: { g: "999", alt: "112" },
+  FR: { g: "112", p: "17", a: "15", f: "18" },
+  DE: { g: "112", p: "110" },
+  IT: { g: "112" },
+  ES: { g: "112" },
+  CL: { p: "133", a: "131", f: "132" },
+  PE: { g: "105" },
+  ID: { g: "112", p: "110", a: "118" },
+  PH: { g: "911" },
+  NZ: { g: "111" },
+  TR: { g: "112" },
+  GR: { g: "112" },
+  NP: { p: "100", a: "102", f: "101" },
+  IN: { g: "112" },
+  CN: { p: "110", a: "120", f: "119" },
+  TW: { p: "110", a: "119", f: "119" },
+  EC: { g: "911" },
+  CR: { g: "911" },
+  GT: { g: "110" },
+  IR: { p: "110", a: "115", f: "125" },
+  PK: { g: "1122", p: "15" },
+  AF: { p: "119", a: "102" },
+};
+
+const $ = (id) => document.getElementById(id);
+const statusEl = $("status");
+const resultsEl = $("results");
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// Simple session cache so re-scans don't re-hit Nominatim.
+const geoCache = new Map();
+const countryCache = new Map();
+
+function setStatus(msg) { statusEl.textContent = msg; }
+
+function parseItinerary(text) {
+  const stops = [];
+  for (const raw of text.split("\n")) {
+    const line = raw.trim();
+    if (!line) continue;
+    const parts = line.split(";").map((s) => s.trim());
+    const place = parts[0];
+    if (!place) continue;
+    stops.push({
+      place,
+      arrive: parts[1] || null,
+      depart: parts[2] || null,
+    });
+  }
+  return stops;
+}
+
+// Haversine distance in km.
+function distanceKm(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const toRad = (d) => (d * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a = Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+
+async function geocode(place) {
+  if (geoCache.has(place)) return geoCache.get(place);
+  const url = "https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&addressdetails=1&q=" +
+    encodeURIComponent(place);
+  const res = await fetch(url, { headers: { "Accept": "application/json" } });
+  if (!res.ok) throw new Error("Nominatim " + res.status);
+  const data = await res.json();
+  if (!data.length) { geoCache.set(place, null); return null; }
+  const hit = data[0];
+  const result = {
+    lat: parseFloat(hit.lat),
+    lon: parseFloat(hit.lon),
+    displayName: hit.display_name,
+    countryCode: (hit.address && hit.address.country_code
+      ? hit.address.country_code.toUpperCase() : null),
+    countryName: hit.address ? hit.address.country : null,
+  };
+  geoCache.set(place, result);
+  return result;
+}
+
+async function getCountry(code) {
+  if (!code) return null;
+  if (countryCache.has(code)) return countryCache.get(code);
+  try {
+    const url = "https://restcountries.com/v3.1/alpha/" + encodeURIComponent(code) +
+      "?fields=flag,idd,name";
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("RESTCountries " + res.status);
+    const data = await res.json();
+    const c = Array.isArray(data) ? data[0] : data;
+    const callingCode = c.idd && c.idd.root
+      ? c.idd.root + (c.idd.suffixes && c.idd.suffixes.length === 1 ? c.idd.suffixes[0] : "")
+      : null;
+    const result = { flag: c.flag || "🏳️", callingCode, name: c.name && c.name.common };
+    countryCache.set(code, result);
+    return result;
+  } catch (e) {
+    countryCache.set(code, null);
+    return null;
+  }
+}
+
+// USGS window: use trip dates if present, else next 30 days.
+function windowFor(stop) {
+  const now = new Date();
+  let start, end;
+  if (stop.arrive) {
+    start = new Date(stop.arrive + "T00:00:00Z");
+    end = stop.depart ? new Date(stop.depart + "T23:59:59Z")
+                      : new Date(start.getTime() + 3 * 864e5);
+  } else {
+    start = now;
+    end = new Date(now.getTime() + 30 * 864e5);
+  }
+  return { start: start.toISOString(), end: end.toISOString() };
+}
+
+async function queryQuakes(lat, lon, radiusKm, minMag, win) {
+  // USGS does the proximity + date + magnitude filtering server-side.
+  const url = "https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson" +
+    "&latitude=" + lat + "&longitude=" + lon + "&maxradiuskm=" + radiusKm +
+    "&minmagnitude=" + minMag +
+    "&starttime=" + encodeURIComponent(win.start) +
+    "&endtime=" + encodeURIComponent(win.end) +
+    "&orderby=magnitude";
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("USGS " + res.status);
+  const data = await res.json();
+  return data.features || [];
+}
+
+function emergencyLine(code) {
+  const e = EMERGENCY[code];
+  if (!e) return null;
+  const bits = [];
+  if (e.g) bits.push(`<span><strong>All:</strong> ${e.g}</span>`);
+  if (e.p) bits.push(`<span><strong>Police:</strong> ${e.p}</span>`);
+  if (e.a) bits.push(`<span><strong>Ambulance:</strong> ${e.a}</span>`);
+  if (e.f) bits.push(`<span><strong>Fire:</strong> ${e.f}</span>`);
+  if (e.alt) bits.push(`<span><strong>Alt:</strong> ${e.alt}</span>`);
+  return bits.join("");
+}
+
+function fmtDate(ms) {
+  return new Date(ms).toLocaleString(undefined, {
+    year: "numeric", month: "short", day: "numeric",
+    hour: "2-digit", minute: "2-digit",
+  });
+}
+
+function renderStop(stop, geo, country, quakes, radiusKm) {
+  if (!geo) {
+    return `<div class="alert stop-clear"><div class="place-line">
+      ⚠️ Could not geocode "${stop.place}" — check spelling.</div></div>`;
+  }
+  const flag = country && country.flag ? country.flag : "📍";
+  const cc = country && country.callingCode ? ` · dialing ${country.callingCode}` : "";
+  if (!quakes.length) {
+    return `<div class="alert stop-clear">
+      <div class="top"><span class="flag">${flag}</span>
+      <span class="place-line">${stop.place}${cc}</span></div>
+      <div class="clear-note">✓ No qualifying quakes within ${radiusKm} km during your stay.</div>
+    </div>`;
+  }
+  const emergency = country ? emergencyLine(geo.countryCode) : null;
+  const items = quakes.map((q) => {
+    const p = q.properties, c = q.geometry.coordinates;
+    const dist = Math.round(distanceKm(geo.lat, geo.lon, c[1], c[0]));
+    const mag = p.mag != null ? p.mag.toFixed(1) : "?";
+    const sev = p.mag >= 6 ? "sev-danger" : "sev-warn";
+    return `<div class="alert ${sev}">
+      <div class="top">
+        <span class="flag">${flag}</span>
+        <span class="mag">M ${mag}</span>
+        <span class="place">${p.place || "Unknown location"}</span>
+      </div>
+      <div class="meta">
+        ${dist} km from ${stop.place} · ${fmtDate(p.time)} ·
+        <a href="${p.url}" target="_blank" rel="noopener">USGS detail →</a>
+      </div>
+      ${emergency ? `<div class="emergency">📞 Emergency in ${geo.countryName || geo.countryCode}: ${emergency}</div>` : ""}
+    </div>`;
+  }).join("");
+  return items;
+}
+
+async function run() {
+  const btn = $("run");
+  btn.disabled = true;
+  resultsEl.innerHTML = "";
+  const stops = parseItinerary($("itin").value);
+  const minMag = parseFloat($("minmag").value) || 4.5;
+  const radiusKm = parseFloat($("radius").value) || 300;
+
+  if (!stops.length) { setStatus("Add at least one stop."); btn.disabled = false; return; }
+
+  let firstGeocode = true;
+  for (let i = 0; i < stops.length; i++) {
+    const stop = stops[i];
+    setStatus(`Checking ${i + 1}/${stops.length}: ${stop.place}…`);
+    try {
+      // Throttle Nominatim to 1 req/sec (skip the wait for cached hits).
+      if (!geoCache.has(stop.place)) {
+        if (!firstGeocode) await sleep(1100);
+        firstGeocode = false;
+      }
+      const geo = await geocode(stop.place);
+      let country = null, quakes = [];
+      if (geo) {
+        country = await getCountry(geo.countryCode);
+        const win = windowFor(stop);
+        quakes = await queryQuakes(geo.lat, geo.lon, radiusKm, minMag, win);
+      }
+      resultsEl.insertAdjacentHTML("beforeend", renderStop(stop, geo, country, quakes, radiusKm));
+    } catch (e) {
+      resultsEl.insertAdjacentHTML("beforeend",
+        `<div class="alert stop-clear"><div class="place-line">⚠️ ${stop.place}: ${e.message}</div></div>`);
+    }
+  }
+  setStatus(`Done — scanned ${stops.length} stop(s).`);
+  btn.disabled = false;
+}
+
+$("run").addEventListener("click", run);
+</script>
+</body>
+</html>
