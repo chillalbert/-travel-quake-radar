@@ -3,379 +3,363 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Disaster-Aware Travel Radar</title>
+<title>Seismic Trip Radar</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
   :root {
-    --bg: #0f1115;
-    --panel: #171a21;
-    --panel-2: #1e222b;
-    --line: #2a2f3a;
-    --text: #e6e8ec;
-    --muted: #9aa1ad;
-    --accent: #4f9cf9;
-    --warn: #f5a623;
-    --danger: #ff5c5c;
-    --ok: #3ecf8e;
+    --bg: #0b0d12;
+    --panel: #12151c;
+    --panel-2: #171b24;
+    --line: #262b36;
+    --line-soft: #1c212b;
+    --text: #eef1f5;
+    --muted: #8b93a1;
+    --accent: #5b9dff;
+    --warn: #f0a92b;
+    --danger: #ff5d5d;
+    --ok: #35d29a;
   }
   * { box-sizing: border-box; }
+  html, body { height: 100%; }
   body {
     margin: 0;
-    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font: 14px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     background: var(--bg);
     color: var(--text);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
   }
-  header {
-    padding: 28px 20px 20px;
+  .topbar {
+    display: flex; align-items: baseline; gap: 12px;
+    padding: 14px 20px;
     border-bottom: 1px solid var(--line);
-    max-width: 860px;
-    margin: 0 auto;
+    flex: 0 0 auto;
   }
-  header h1 { margin: 0 0 6px; font-size: 22px; font-weight: 600; }
-  header p { margin: 0; color: var(--muted); font-size: 14px; }
-  main { max-width: 860px; margin: 0 auto; padding: 20px; }
-  .card {
+  .topbar h1 { margin: 0; font-size: 16px; font-weight: 600; letter-spacing: -.01em; }
+  .topbar .tag { color: var(--muted); font-size: 12.5px; }
+  .layout { display: flex; flex: 1 1 auto; min-height: 0; }
+  .sidebar {
+    width: 380px; flex: 0 0 380px;
+    border-right: 1px solid var(--line);
+    display: flex; flex-direction: column;
     background: var(--panel);
-    border: 1px solid var(--line);
-    border-radius: 12px;
-    padding: 18px;
-    margin-bottom: 18px;
+    min-height: 0;
   }
-  .card h2 { margin: 0 0 12px; font-size: 15px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
-  label { display: block; font-size: 13px; color: var(--muted); margin: 0 0 4px; }
-  input, textarea {
-    width: 100%;
-    background: var(--panel-2);
-    border: 1px solid var(--line);
-    color: var(--text);
-    border-radius: 8px;
-    padding: 10px 12px;
-    font: inherit;
+  .sidebar .scroll { overflow-y: auto; padding: 16px; }
+  #map { flex: 1 1 auto; background: #0b0d12; }
+  .leaflet-container { background: #0b0d12; font: inherit; }
+
+  label { display: block; font-size: 12px; color: var(--muted); margin: 0 0 5px; font-weight: 500; }
+  textarea, input {
+    width: 100%; background: var(--panel-2);
+    border: 1px solid var(--line); color: var(--text);
+    border-radius: 8px; padding: 9px 11px; font: inherit;
   }
-  textarea { min-height: 120px; resize: vertical; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; }
-  .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: end; margin-bottom: 12px; }
-  .row > div { flex: 1; min-width: 140px; }
+  textarea { min-height: 104px; resize: vertical; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12.5px; line-height: 1.6; }
+  input:focus, textarea:focus { outline: none; border-color: var(--accent); }
+  .hint { font-size: 11.5px; color: var(--muted); margin-top: 7px; line-height: 1.5; }
+  .controls { display: flex; gap: 10px; margin: 12px 0; }
+  .controls > div { flex: 1; }
   button {
-    background: var(--accent);
-    color: #06121f;
-    border: 0;
-    border-radius: 8px;
-    padding: 11px 18px;
-    font: inherit;
-    font-weight: 600;
-    cursor: pointer;
+    background: var(--accent); color: #04111f; border: 0;
+    border-radius: 8px; padding: 11px 16px; font: inherit; font-weight: 600;
+    cursor: pointer; width: 100%;
   }
-  button.secondary { background: var(--panel-2); color: var(--text); border: 1px solid var(--line); }
   button:disabled { opacity: .5; cursor: not-allowed; }
-  .hint { font-size: 12px; color: var(--muted); margin-top: 8px; }
-  .status { font-size: 13px; color: var(--muted); margin: 10px 0 0; min-height: 18px; }
-  .alert {
-    border: 1px solid var(--line);
-    border-left: 4px solid var(--warn);
-    background: var(--panel-2);
-    border-radius: 8px;
-    padding: 14px 16px;
-    margin-bottom: 12px;
+  .status { font-size: 12px; color: var(--muted); margin-top: 10px; min-height: 16px; }
+
+  .divider { height: 1px; background: var(--line-soft); margin: 16px 0; }
+  .results-head { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 10px; font-weight: 600; }
+
+  .stop {
+    border: 1px solid var(--line); border-radius: 10px;
+    padding: 12px 13px; margin-bottom: 10px; background: var(--panel-2);
+    cursor: pointer; transition: border-color .15s;
   }
-  .alert.sev-danger { border-left-color: var(--danger); }
-  .alert.sev-warn { border-left-color: var(--warn); }
-  .alert .top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-  .alert .flag { font-size: 22px; }
-  .alert .mag {
-    font-weight: 700;
-    font-variant-numeric: tabular-nums;
-    padding: 2px 8px;
-    border-radius: 6px;
-    background: rgba(245,166,35,.15);
-    color: var(--warn);
+  .stop:hover { border-color: #33404f; }
+  .stop.active { border-color: var(--accent); }
+  .stop-top { display: flex; align-items: center; gap: 9px; }
+  .stop-flag { font-size: 18px; line-height: 1; }
+  .stop-name { font-weight: 600; font-size: 13.5px; }
+  .stop-dates { color: var(--muted); font-size: 11.5px; margin-left: auto; white-space: nowrap; }
+  .stop-verdict { font-size: 12px; margin-top: 7px; display: flex; align-items: center; gap: 6px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto; }
+  .dot.ok { background: var(--ok); } .dot.warn { background: var(--warn); } .dot.danger { background: var(--danger); } .dot.gray { background: var(--muted); }
+  .quake-row {
+    display: flex; align-items: baseline; gap: 8px;
+    font-size: 12px; padding: 5px 0 0; color: var(--muted);
   }
-  .alert.sev-danger .mag { background: rgba(255,92,92,.15); color: var(--danger); }
-  .alert .place { font-weight: 600; }
-  .alert .meta { color: var(--muted); font-size: 13px; margin-top: 6px; }
-  .alert .meta a { color: var(--accent); }
-  .alert .emergency { margin-top: 8px; font-size: 13px; }
-  .alert .emergency span { display: inline-block; margin-right: 14px; }
-  .clear-note { color: var(--ok); font-size: 14px; }
-  .stop-clear { border-left-color: var(--line); }
-  .stop-clear .place-line { color: var(--muted); }
-  footer { max-width: 860px; margin: 0 auto; padding: 20px; color: var(--muted); font-size: 12px; border-top: 1px solid var(--line); }
-  footer a { color: var(--accent); }
-  code { background: var(--panel-2); padding: 1px 5px; border-radius: 4px; font-size: 12px; }
+  .quake-row .mag { font-weight: 700; font-variant-numeric: tabular-nums; color: var(--warn); min-width: 42px; }
+  .quake-row.big .mag { color: var(--danger); }
+  .quake-row a { color: var(--accent); text-decoration: none; margin-left: auto; }
+  .emergency {
+    margin-top: 9px; padding-top: 9px; border-top: 1px dashed var(--line);
+    font-size: 11.5px; color: var(--muted);
+  }
+  .emergency b { color: var(--text); font-weight: 600; }
+  .emergency span { margin-right: 12px; white-space: nowrap; }
+
+  .legend {
+    position: absolute; bottom: 14px; right: 14px; z-index: 500;
+    background: rgba(18,21,28,.92); border: 1px solid var(--line);
+    border-radius: 9px; padding: 10px 12px; font-size: 11.5px; color: var(--muted);
+    backdrop-filter: blur(6px);
+  }
+  .legend .lr { display: flex; align-items: center; gap: 7px; margin: 3px 0; }
+  .legend .sw { width: 10px; height: 10px; border-radius: 50%; }
+  .maptext a { color: var(--accent); }
+  .footnote { font-size: 11px; color: var(--muted); margin-top: 14px; line-height: 1.5; }
+  .footnote a { color: var(--accent); }
 </style>
 </head>
 <body>
-<header>
-  <h1>🌍 Disaster-Aware Travel Radar</h1>
-  <p>Enter your itinerary. It checks USGS earthquake data against each stop's location and dates, and surfaces only quakes that actually overlap your trip — with local emergency numbers attached.</p>
-</header>
+<div class="topbar">
+  <h1>🌐 Seismic Trip Radar</h1>
+  <span class="tag">Plan around earthquake risk before you travel — per stop, per date.</span>
+</div>
 
-<main>
-  <div class="card">
-    <h2>Your itinerary</h2>
-    <label for="itin">One stop per line: <code>Place; arrive YYYY-MM-DD; depart YYYY-MM-DD</code></label>
-    <textarea id="itin" spellcheck="false">Tokyo, Japan; 2026-09-10; 2026-09-15
+<div class="layout">
+  <aside class="sidebar">
+    <div class="scroll">
+      <label for="itin">Itinerary — one stop per line</label>
+      <textarea id="itin" spellcheck="false">Tokyo, Japan; 2026-09-10; 2026-09-15
 Mexico City, Mexico; 2026-09-16; 2026-09-20
 Reykjavik, Iceland; 2026-09-21; 2026-09-25</textarea>
-    <div class="hint">Dates optional — leave them off (<code>Place</code> only) to scan the next 30 days. Geocoding is throttled to 1 request/sec per Nominatim's usage policy, so multi-stop scans take a few seconds.</div>
-    <div class="row" style="margin-top:14px;">
-      <div>
-        <label for="minmag">Minimum magnitude</label>
-        <input id="minmag" type="number" step="0.1" value="4.5">
+      <div class="hint"><code>Place; arrive; depart</code> (YYYY-MM-DD). Dates optional — bare place scans the next 30 days.</div>
+
+      <div class="controls">
+        <div>
+          <label for="minmag">Min magnitude</label>
+          <input id="minmag" type="number" step="0.1" value="4.5">
+        </div>
+        <div>
+          <label for="radius">Radius (km)</label>
+          <input id="radius" type="number" step="10" value="300">
+        </div>
       </div>
-      <div>
-        <label for="radius">Alert radius (km)</label>
-        <input id="radius" type="number" step="10" value="300">
-      </div>
-      <div style="flex:0 0 auto; align-self:end;">
-        <button id="run">Scan itinerary</button>
+      <button id="run">Scan itinerary</button>
+      <div class="status" id="status"></div>
+
+      <div class="divider"></div>
+      <div class="results-head">Stops</div>
+      <div id="results"></div>
+
+      <div class="footnote">
+        Quakes: <a href="https://earthquake.usgs.gov/fdsnws/event/1/" target="_blank" rel="noopener">USGS</a> ·
+        Geocoding © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> ·
+        Country data <a href="https://restcountries.com/" target="_blank" rel="noopener">REST Countries</a>.
+        Emergency numbers are best-effort — always verify locally.
       </div>
     </div>
-    <p class="status" id="status"></p>
+  </aside>
+
+  <div id="map" style="position:relative;">
+    <div class="legend">
+      <div class="lr"><span class="sw" style="background:var(--accent)"></span> Trip stop</div>
+      <div class="lr"><span class="sw" style="background:var(--warn)"></span> Quake M4.5–5.9</div>
+      <div class="lr"><span class="sw" style="background:var(--danger)"></span> Quake M6+</div>
+    </div>
   </div>
-
-  <div id="results"></div>
-</main>
-
-<footer>
-  Data: <a href="https://earthquake.usgs.gov/fdsnws/event/1/" target="_blank" rel="noopener">USGS Earthquake FDSN</a> ·
-  Geocoding © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors via <a href="https://nominatim.org/" target="_blank" rel="noopener">Nominatim</a> ·
-  Country data <a href="https://restcountries.com/" target="_blank" rel="noopener">REST Countries</a>.
-  Emergency numbers are a bundled best-effort dataset — <strong>always verify locally</strong>; in a real emergency call the number posted where you are.
-</footer>
+</div>
 
 <script>
 // ---------- Bundled emergency numbers (best-effort; REST Countries doesn't carry these) ----------
-// Keyed by ISO alpha-2. { g: general/all-in-one, p: police, a: ambulance, f: fire }
 const EMERGENCY = {
-  JP: { p: "110", a: "119", f: "119" },
-  MX: { g: "911" },
-  IS: { g: "112" },
-  US: { g: "911" },
-  CA: { g: "911" },
-  GB: { g: "999", alt: "112" },
-  FR: { g: "112", p: "17", a: "15", f: "18" },
-  DE: { g: "112", p: "110" },
-  IT: { g: "112" },
-  ES: { g: "112" },
-  CL: { p: "133", a: "131", f: "132" },
-  PE: { g: "105" },
-  ID: { g: "112", p: "110", a: "118" },
-  PH: { g: "911" },
-  NZ: { g: "111" },
-  TR: { g: "112" },
-  GR: { g: "112" },
-  NP: { p: "100", a: "102", f: "101" },
-  IN: { g: "112" },
-  CN: { p: "110", a: "120", f: "119" },
-  TW: { p: "110", a: "119", f: "119" },
-  EC: { g: "911" },
-  CR: { g: "911" },
-  GT: { g: "110" },
-  IR: { p: "110", a: "115", f: "125" },
-  PK: { g: "1122", p: "15" },
-  AF: { p: "119", a: "102" },
+  JP:{p:"110",a:"119",f:"119"}, MX:{g:"911"}, IS:{g:"112"}, US:{g:"911"}, CA:{g:"911"},
+  GB:{g:"999",alt:"112"}, FR:{g:"112",p:"17",a:"15",f:"18"}, DE:{g:"112",p:"110"},
+  IT:{g:"112"}, ES:{g:"112"}, CL:{p:"133",a:"131",f:"132"}, PE:{g:"105"},
+  ID:{g:"112",p:"110",a:"118"}, PH:{g:"911"}, NZ:{g:"111"}, TR:{g:"112"}, GR:{g:"112"},
+  NP:{p:"100",a:"102",f:"101"}, IN:{g:"112"}, CN:{p:"110",a:"120",f:"119"},
+  TW:{p:"110",a:"119",f:"119"}, EC:{g:"911"}, CR:{g:"911"}, GT:{g:"110"},
+  IR:{p:"110",a:"115",f:"125"}, PK:{g:"1122",p:"15"}, AF:{p:"119",a:"102"}
 };
 
 const $ = (id) => document.getElementById(id);
-const statusEl = $("status");
-const resultsEl = $("results");
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const geoCache = new Map(), countryCache = new Map();
 
-// Simple session cache so re-scans don't re-hit Nominatim.
-const geoCache = new Map();
-const countryCache = new Map();
+// ----- Map setup -----
+const map = L.map("map", { zoomControl: true, attributionControl: true }).setView([20, 0], 2);
+L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+  attribution: '© OpenStreetMap © CARTO', subdomains: "abcd", maxZoom: 19
+}).addTo(map);
+let layerGroup = L.layerGroup().addTo(map);
+const stopMarkers = {}; // index -> marker
 
-function setStatus(msg) { statusEl.textContent = msg; }
+function setStatus(m){ $("status").textContent = m; }
 
-function parseItinerary(text) {
+function parseItinerary(text){
   const stops = [];
-  for (const raw of text.split("\n")) {
-    const line = raw.trim();
-    if (!line) continue;
-    const parts = line.split(";").map((s) => s.trim());
-    const place = parts[0];
-    if (!place) continue;
-    stops.push({
-      place,
-      arrive: parts[1] || null,
-      depart: parts[2] || null,
-    });
+  for (const raw of text.split("\n")){
+    const line = raw.trim(); if (!line) continue;
+    const p = line.split(";").map(s=>s.trim());
+    if (!p[0]) continue;
+    stops.push({ place:p[0], arrive:p[1]||null, depart:p[2]||null });
   }
   return stops;
 }
 
-// Haversine distance in km.
-function distanceKm(lat1, lon1, lat2, lon2) {
-  const R = 6371;
-  const toRad = (d) => (d * Math.PI) / 180;
-  const dLat = toRad(lat2 - lat1);
-  const dLon = toRad(lon2 - lon1);
-  const a = Math.sin(dLat / 2) ** 2 +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
-  return 2 * R * Math.asin(Math.sqrt(a));
+function distanceKm(la1,lo1,la2,lo2){
+  const R=6371, r=d=>d*Math.PI/180;
+  const dLa=r(la2-la1), dLo=r(lo2-lo1);
+  const a=Math.sin(dLa/2)**2 + Math.cos(r(la1))*Math.cos(r(la2))*Math.sin(dLo/2)**2;
+  return 2*R*Math.asin(Math.sqrt(a));
 }
 
-async function geocode(place) {
+async function geocode(place){
   if (geoCache.has(place)) return geoCache.get(place);
-  const url = "https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&addressdetails=1&q=" +
-    encodeURIComponent(place);
-  const res = await fetch(url, { headers: { "Accept": "application/json" } });
-  if (!res.ok) throw new Error("Nominatim " + res.status);
-  const data = await res.json();
-  if (!data.length) { geoCache.set(place, null); return null; }
-  const hit = data[0];
-  const result = {
-    lat: parseFloat(hit.lat),
-    lon: parseFloat(hit.lon),
-    displayName: hit.display_name,
-    countryCode: (hit.address && hit.address.country_code
-      ? hit.address.country_code.toUpperCase() : null),
-    countryName: hit.address ? hit.address.country : null,
-  };
-  geoCache.set(place, result);
-  return result;
+  const url="https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&addressdetails=1&q="+encodeURIComponent(place);
+  const res=await fetch(url,{headers:{"Accept":"application/json"}});
+  if(!res.ok) throw new Error("Nominatim "+res.status);
+  const d=await res.json();
+  if(!d.length){ geoCache.set(place,null); return null; }
+  const h=d[0];
+  const out={ lat:parseFloat(h.lat), lon:parseFloat(h.lon), displayName:h.display_name,
+    countryCode:(h.address&&h.address.country_code)?h.address.country_code.toUpperCase():null,
+    countryName:h.address?h.address.country:null };
+  geoCache.set(place,out); return out;
 }
 
-async function getCountry(code) {
-  if (!code) return null;
-  if (countryCache.has(code)) return countryCache.get(code);
-  try {
-    const url = "https://restcountries.com/v3.1/alpha/" + encodeURIComponent(code) +
-      "?fields=flag,idd,name";
-    const res = await fetch(url);
-    if (!res.ok) throw new Error("RESTCountries " + res.status);
-    const data = await res.json();
-    const c = Array.isArray(data) ? data[0] : data;
-    const callingCode = c.idd && c.idd.root
-      ? c.idd.root + (c.idd.suffixes && c.idd.suffixes.length === 1 ? c.idd.suffixes[0] : "")
-      : null;
-    const result = { flag: c.flag || "🏳️", callingCode, name: c.name && c.name.common };
-    countryCache.set(code, result);
-    return result;
-  } catch (e) {
-    countryCache.set(code, null);
-    return null;
+async function getCountry(code){
+  if(!code) return null;
+  if(countryCache.has(code)) return countryCache.get(code);
+  try{
+    const url="https://restcountries.com/v3.1/alpha/"+encodeURIComponent(code)+"?fields=flag,idd,name";
+    const res=await fetch(url); if(!res.ok) throw new Error("RC "+res.status);
+    const d=await res.json(); const c=Array.isArray(d)?d[0]:d;
+    const cc=c.idd&&c.idd.root?c.idd.root+(c.idd.suffixes&&c.idd.suffixes.length===1?c.idd.suffixes[0]:""):null;
+    const out={ flag:c.flag||"🏳️", callingCode:cc, name:c.name&&c.name.common };
+    countryCache.set(code,out); return out;
+  }catch(e){ countryCache.set(code,null); return null; }
+}
+
+function windowFor(stop){
+  const now=new Date(); let start,end;
+  if(stop.arrive){
+    start=new Date(stop.arrive+"T00:00:00Z");
+    end=stop.depart?new Date(stop.depart+"T23:59:59Z"):new Date(start.getTime()+3*864e5);
+  } else { start=now; end=new Date(now.getTime()+30*864e5); }
+  return { start:start.toISOString(), end:end.toISOString() };
+}
+
+async function queryQuakes(lat,lon,radiusKm,minMag,win){
+  const url="https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson"+
+    "&latitude="+lat+"&longitude="+lon+"&maxradiuskm="+radiusKm+
+    "&minmagnitude="+minMag+"&starttime="+encodeURIComponent(win.start)+
+    "&endtime="+encodeURIComponent(win.end)+"&orderby=magnitude";
+  const res=await fetch(url); if(!res.ok) throw new Error("USGS "+res.status);
+  const d=await res.json(); return d.features||[];
+}
+
+function emergencyLine(code){
+  const e=EMERGENCY[code]; if(!e) return null;
+  const b=[];
+  if(e.g) b.push(`<span><b>All:</b> ${e.g}</span>`);
+  if(e.p) b.push(`<span><b>Police:</b> ${e.p}</span>`);
+  if(e.a) b.push(`<span><b>Ambulance:</b> ${e.a}</span>`);
+  if(e.f) b.push(`<span><b>Fire:</b> ${e.f}</span>`);
+  if(e.alt) b.push(`<span><b>Alt:</b> ${e.alt}</span>`);
+  return b.join("");
+}
+function fmtDate(ms){ return new Date(ms).toLocaleDateString(undefined,{month:"short",day:"numeric"}); }
+
+function magRadiusPx(m){ return Math.max(4, (m-3)*4); }
+
+function renderStopCard(i, stop, geo, country, quakes, radiusKm){
+  if(!geo){
+    return `<div class="stop" data-i="${i}"><div class="stop-top">
+      <span class="stop-flag">⚠️</span><span class="stop-name">${stop.place}</span></div>
+      <div class="stop-verdict"><span class="dot gray"></span>Couldn't geocode — check spelling.</div></div>`;
   }
-}
-
-// USGS window: use trip dates if present, else next 30 days.
-function windowFor(stop) {
-  const now = new Date();
-  let start, end;
-  if (stop.arrive) {
-    start = new Date(stop.arrive + "T00:00:00Z");
-    end = stop.depart ? new Date(stop.depart + "T23:59:59Z")
-                      : new Date(start.getTime() + 3 * 864e5);
+  const flag = country&&country.flag?country.flag:"📍";
+  const dates = stop.arrive?`${fmtDate(new Date(stop.arrive))}${stop.depart?"–"+fmtDate(new Date(stop.depart)):""}`:"next 30d";
+  let verdict, quakeHtml="";
+  if(!quakes.length){
+    verdict=`<span class="dot ok"></span>Clear — no M${$("minmag").value}+ within ${radiusKm} km`;
   } else {
-    start = now;
-    end = new Date(now.getTime() + 30 * 864e5);
+    const maxMag=Math.max(...quakes.map(q=>q.properties.mag||0));
+    const cls=maxMag>=6?"danger":"warn";
+    verdict=`<span class="dot ${cls}"></span>${quakes.length} quake${quakes.length>1?"s":""}, up to M${maxMag.toFixed(1)}`;
+    quakeHtml = quakes.slice(0,4).map(q=>{
+      const p=q.properties,c=q.geometry.coordinates;
+      const dist=Math.round(distanceKm(geo.lat,geo.lon,c[1],c[0]));
+      const big=p.mag>=6?"big":"";
+      return `<div class="quake-row ${big}"><span class="mag">M${p.mag.toFixed(1)}</span>
+        <span>${dist} km · ${fmtDate(p.time)}</span>
+        <a href="${p.url}" target="_blank" rel="noopener">detail →</a></div>`;
+    }).join("");
+    const em = emergencyLine(geo.countryCode);
+    if(em) quakeHtml += `<div class="emergency">📞 ${geo.countryName||geo.countryCode}: ${em}</div>`;
   }
-  return { start: start.toISOString(), end: end.toISOString() };
+  return `<div class="stop" data-i="${i}">
+    <div class="stop-top"><span class="stop-flag">${flag}</span>
+      <span class="stop-name">${stop.place.split(",")[0]}</span>
+      <span class="stop-dates">${dates}</span></div>
+    <div class="stop-verdict">${verdict}</div>${quakeHtml}</div>`;
 }
 
-async function queryQuakes(lat, lon, radiusKm, minMag, win) {
-  // USGS does the proximity + date + magnitude filtering server-side.
-  const url = "https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson" +
-    "&latitude=" + lat + "&longitude=" + lon + "&maxradiuskm=" + radiusKm +
-    "&minmagnitude=" + minMag +
-    "&starttime=" + encodeURIComponent(win.start) +
-    "&endtime=" + encodeURIComponent(win.end) +
-    "&orderby=magnitude";
-  const res = await fetch(url);
-  if (!res.ok) throw new Error("USGS " + res.status);
-  const data = await res.json();
-  return data.features || [];
-}
-
-function emergencyLine(code) {
-  const e = EMERGENCY[code];
-  if (!e) return null;
-  const bits = [];
-  if (e.g) bits.push(`<span><strong>All:</strong> ${e.g}</span>`);
-  if (e.p) bits.push(`<span><strong>Police:</strong> ${e.p}</span>`);
-  if (e.a) bits.push(`<span><strong>Ambulance:</strong> ${e.a}</span>`);
-  if (e.f) bits.push(`<span><strong>Fire:</strong> ${e.f}</span>`);
-  if (e.alt) bits.push(`<span><strong>Alt:</strong> ${e.alt}</span>`);
-  return bits.join("");
-}
-
-function fmtDate(ms) {
-  return new Date(ms).toLocaleString(undefined, {
-    year: "numeric", month: "short", day: "numeric",
-    hour: "2-digit", minute: "2-digit",
-  });
-}
-
-function renderStop(stop, geo, country, quakes, radiusKm) {
-  if (!geo) {
-    return `<div class="alert stop-clear"><div class="place-line">
-      ⚠️ Could not geocode "${stop.place}" — check spelling.</div></div>`;
+function drawStop(i, geo, quakes, radiusKm){
+  if(!geo) return;
+  L.circle([geo.lat,geo.lon],{ radius:radiusKm*1000, color:"#5b9dff",
+    weight:1, opacity:.4, fillColor:"#5b9dff", fillOpacity:.05 }).addTo(layerGroup);
+  const m=L.circleMarker([geo.lat,geo.lon],{ radius:7, color:"#5b9dff",
+    weight:2, fillColor:"#5b9dff", fillOpacity:.9 }).addTo(layerGroup);
+  m.bindPopup(`<b>${geo.displayName.split(",").slice(0,2).join(", ")}</b>`);
+  stopMarkers[i]=m;
+  for(const q of quakes){
+    const c=q.geometry.coordinates, mag=q.properties.mag||0;
+    const col=mag>=6?"#ff5d5d":"#f0a92b";
+    L.circleMarker([c[1],c[0]],{ radius:magRadiusPx(mag), color:col, weight:1.5,
+      fillColor:col, fillOpacity:.35 }).addTo(layerGroup)
+      .bindPopup(`<b>M${mag.toFixed(1)}</b><br>${q.properties.place||""}`);
   }
-  const flag = country && country.flag ? country.flag : "📍";
-  const cc = country && country.callingCode ? ` · dialing ${country.callingCode}` : "";
-  if (!quakes.length) {
-    return `<div class="alert stop-clear">
-      <div class="top"><span class="flag">${flag}</span>
-      <span class="place-line">${stop.place}${cc}</span></div>
-      <div class="clear-note">✓ No qualifying quakes within ${radiusKm} km during your stay.</div>
-    </div>`;
-  }
-  const emergency = country ? emergencyLine(geo.countryCode) : null;
-  const items = quakes.map((q) => {
-    const p = q.properties, c = q.geometry.coordinates;
-    const dist = Math.round(distanceKm(geo.lat, geo.lon, c[1], c[0]));
-    const mag = p.mag != null ? p.mag.toFixed(1) : "?";
-    const sev = p.mag >= 6 ? "sev-danger" : "sev-warn";
-    return `<div class="alert ${sev}">
-      <div class="top">
-        <span class="flag">${flag}</span>
-        <span class="mag">M ${mag}</span>
-        <span class="place">${p.place || "Unknown location"}</span>
-      </div>
-      <div class="meta">
-        ${dist} km from ${stop.place} · ${fmtDate(p.time)} ·
-        <a href="${p.url}" target="_blank" rel="noopener">USGS detail →</a>
-      </div>
-      ${emergency ? `<div class="emergency">📞 Emergency in ${geo.countryName || geo.countryCode}: ${emergency}</div>` : ""}
-    </div>`;
-  }).join("");
-  return items;
 }
 
-async function run() {
-  const btn = $("run");
-  btn.disabled = true;
-  resultsEl.innerHTML = "";
-  const stops = parseItinerary($("itin").value);
-  const minMag = parseFloat($("minmag").value) || 4.5;
-  const radiusKm = parseFloat($("radius").value) || 300;
+async function run(){
+  const btn=$("run"); btn.disabled=true;
+  $("results").innerHTML=""; layerGroup.clearLayers();
+  for(const k in stopMarkers) delete stopMarkers[k];
+  const stops=parseItinerary($("itin").value);
+  const minMag=parseFloat($("minmag").value)||4.5;
+  const radiusKm=parseFloat($("radius").value)||300;
+  if(!stops.length){ setStatus("Add at least one stop."); btn.disabled=false; return; }
 
-  if (!stops.length) { setStatus("Add at least one stop."); btn.disabled = false; return; }
-
-  let firstGeocode = true;
-  for (let i = 0; i < stops.length; i++) {
-    const stop = stops[i];
-    setStatus(`Checking ${i + 1}/${stops.length}: ${stop.place}…`);
-    try {
-      // Throttle Nominatim to 1 req/sec (skip the wait for cached hits).
-      if (!geoCache.has(stop.place)) {
-        if (!firstGeocode) await sleep(1100);
-        firstGeocode = false;
+  const bounds=[];
+  let firstGeocode=true;
+  for(let i=0;i<stops.length;i++){
+    const stop=stops[i];
+    setStatus(`Checking ${i+1}/${stops.length}: ${stop.place}…`);
+    try{
+      if(!geoCache.has(stop.place)){ if(!firstGeocode) await sleep(1100); firstGeocode=false; }
+      const geo=await geocode(stop.place);
+      let country=null,quakes=[];
+      if(geo){
+        country=await getCountry(geo.countryCode);
+        quakes=await queryQuakes(geo.lat,geo.lon,radiusKm,minMag,windowFor(stop));
+        drawStop(i,geo,quakes,radiusKm);
+        bounds.push([geo.lat,geo.lon]);
       }
-      const geo = await geocode(stop.place);
-      let country = null, quakes = [];
-      if (geo) {
-        country = await getCountry(geo.countryCode);
-        const win = windowFor(stop);
-        quakes = await queryQuakes(geo.lat, geo.lon, radiusKm, minMag, win);
-      }
-      resultsEl.insertAdjacentHTML("beforeend", renderStop(stop, geo, country, quakes, radiusKm));
-    } catch (e) {
-      resultsEl.insertAdjacentHTML("beforeend",
-        `<div class="alert stop-clear"><div class="place-line">⚠️ ${stop.place}: ${e.message}</div></div>`);
+      $("results").insertAdjacentHTML("beforeend", renderStopCard(i,stop,geo,country,quakes,radiusKm));
+    }catch(e){
+      $("results").insertAdjacentHTML("beforeend",
+        `<div class="stop"><div class="stop-verdict"><span class="dot gray"></span>${stop.place}: ${e.message}</div></div>`);
     }
   }
-  setStatus(`Done — scanned ${stops.length} stop(s).`);
-  btn.disabled = false;
+  if(bounds.length) map.fitBounds(bounds,{ padding:[60,60], maxZoom:6 });
+  setStatus(`Done — ${stops.length} stop(s) scanned.`);
+  btn.disabled=false;
+
+  document.querySelectorAll(".stop[data-i]").forEach(el=>{
+    el.addEventListener("click",()=>{
+      document.querySelectorAll(".stop").forEach(s=>s.classList.remove("active"));
+      el.classList.add("active");
+      const i=el.getAttribute("data-i"); const m=stopMarkers[i];
+      if(m){ map.flyTo(m.getLatLng(),6,{duration:.6}); m.openPopup(); }
+    });
+  });
 }
 
 $("run").addEventListener("click", run);
