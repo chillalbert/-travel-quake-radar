@@ -8,117 +8,104 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
   :root {
-    --bg: #0b0d12;
-    --panel: #12151c;
-    --panel-2: #171b24;
-    --line: #262b36;
-    --line-soft: #1c212b;
-    --text: #eef1f5;
-    --muted: #8b93a1;
-    --accent: #5b9dff;
-    --warn: #f0a92b;
-    --danger: #ff5d5d;
-    --ok: #35d29a;
+    --bg:#0b0d12; --panel:#12151c; --panel-2:#171b24; --panel-3:#1c212b;
+    --line:#262b36; --line-soft:#1c212b;
+    --text:#eef1f5; --muted:#8b93a1; --muted-2:#5c6472;
+    --accent:#5b9dff; --warn:#f0a92b; --danger:#ff5d5d; --ok:#35d29a; --volcano:#ff8a4c;
   }
-  * { box-sizing: border-box; }
-  html, body { height: 100%; }
+  * { box-sizing:border-box; }
+  html,body { height:100%; }
   body {
-    margin: 0;
-    font: 14px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    overflow: hidden;
+    margin:0; font:14px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg); color:var(--text); display:flex; flex-direction:column; height:100vh; overflow:hidden;
   }
-  .topbar {
-    display: flex; align-items: baseline; gap: 12px;
-    padding: 14px 20px;
-    border-bottom: 1px solid var(--line);
-    flex: 0 0 auto;
-  }
-  .topbar h1 { margin: 0; font-size: 16px; font-weight: 600; letter-spacing: -.01em; }
-  .topbar .tag { color: var(--muted); font-size: 12.5px; }
-  .layout { display: flex; flex: 1 1 auto; min-height: 0; }
-  .sidebar {
-    width: 380px; flex: 0 0 380px;
-    border-right: 1px solid var(--line);
-    display: flex; flex-direction: column;
-    background: var(--panel);
-    min-height: 0;
-  }
-  .sidebar .scroll { overflow-y: auto; padding: 16px; }
-  #map { flex: 1 1 auto; background: #0b0d12; }
-  .leaflet-container { background: #0b0d12; font: inherit; }
+  .topbar { display:flex; align-items:center; gap:12px; padding:12px 18px; border-bottom:1px solid var(--line); flex:0 0 auto; }
+  .topbar h1 { margin:0; font-size:15px; font-weight:600; letter-spacing:-.01em; }
+  .topbar .tag { color:var(--muted); font-size:12px; }
+  .topbar .spacer { flex:1; }
+  .topbar button.mini { width:auto; padding:7px 12px; font-size:12px; background:var(--panel-3); color:var(--text); border:1px solid var(--line); }
+  .topbar button.mini:hover { border-color:#33404f; }
 
-  label { display: block; font-size: 12px; color: var(--muted); margin: 0 0 5px; font-weight: 500; }
-  textarea, input {
-    width: 100%; background: var(--panel-2);
-    border: 1px solid var(--line); color: var(--text);
-    border-radius: 8px; padding: 9px 11px; font: inherit;
-  }
-  textarea { min-height: 104px; resize: vertical; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12.5px; line-height: 1.6; }
-  input:focus, textarea:focus { outline: none; border-color: var(--accent); }
-  .hint { font-size: 11.5px; color: var(--muted); margin-top: 7px; line-height: 1.5; }
-  .controls { display: flex; gap: 10px; margin: 12px 0; }
-  .controls > div { flex: 1; }
-  button {
-    background: var(--accent); color: #04111f; border: 0;
-    border-radius: 8px; padding: 11px 16px; font: inherit; font-weight: 600;
-    cursor: pointer; width: 100%;
-  }
-  button:disabled { opacity: .5; cursor: not-allowed; }
-  .status { font-size: 12px; color: var(--muted); margin-top: 10px; min-height: 16px; }
+  .layout { display:flex; flex:1 1 auto; min-height:0; }
+  .sidebar { width:400px; flex:0 0 400px; border-right:1px solid var(--line); display:flex; flex-direction:column; background:var(--panel); min-height:0; }
+  .sidebar .scroll { overflow-y:auto; padding:16px; }
+  .rightpane { flex:1 1 auto; display:flex; flex-direction:column; min-width:0; }
+  #map { flex:1 1 auto; background:#0b0d12; position:relative; }
+  .leaflet-container { background:#0b0d12; font:inherit; }
 
-  .divider { height: 1px; background: var(--line-soft); margin: 16px 0; }
-  .results-head { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 10px; font-weight: 600; }
+  label { display:block; font-size:12px; color:var(--muted); margin:0 0 5px; font-weight:500; }
+  textarea,input { width:100%; background:var(--panel-2); border:1px solid var(--line); color:var(--text); border-radius:8px; padding:9px 11px; font:inherit; }
+  textarea { min-height:96px; resize:vertical; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12.5px; line-height:1.6; }
+  input:focus,textarea:focus { outline:none; border-color:var(--accent); }
+  .hint { font-size:11.5px; color:var(--muted); margin-top:7px; line-height:1.5; }
+  code { background:var(--panel-3); padding:1px 5px; border-radius:4px; font-size:11.5px; }
+  .controls { display:flex; gap:10px; margin:12px 0; }
+  .controls > div { flex:1; }
+  button { background:var(--accent); color:#04111f; border:0; border-radius:8px; padding:11px 16px; font:inherit; font-weight:600; cursor:pointer; width:100%; }
+  button:disabled { opacity:.5; cursor:not-allowed; }
+  .status { font-size:12px; color:var(--muted); margin-top:10px; min-height:16px; }
 
-  .stop {
-    border: 1px solid var(--line); border-radius: 10px;
-    padding: 12px 13px; margin-bottom: 10px; background: var(--panel-2);
-    cursor: pointer; transition: border-color .15s;
-  }
-  .stop:hover { border-color: #33404f; }
-  .stop.active { border-color: var(--accent); }
-  .stop-top { display: flex; align-items: center; gap: 9px; }
-  .stop-flag { font-size: 18px; line-height: 1; }
-  .stop-name { font-weight: 600; font-size: 13.5px; }
-  .stop-dates { color: var(--muted); font-size: 11.5px; margin-left: auto; white-space: nowrap; }
-  .stop-verdict { font-size: 12px; margin-top: 7px; display: flex; align-items: center; gap: 6px; }
-  .dot { width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto; }
-  .dot.ok { background: var(--ok); } .dot.warn { background: var(--warn); } .dot.danger { background: var(--danger); } .dot.gray { background: var(--muted); }
-  .quake-row {
-    display: flex; align-items: baseline; gap: 8px;
-    font-size: 12px; padding: 5px 0 0; color: var(--muted);
-  }
-  .quake-row .mag { font-weight: 700; font-variant-numeric: tabular-nums; color: var(--warn); min-width: 42px; }
-  .quake-row.big .mag { color: var(--danger); }
-  .quake-row a { color: var(--accent); text-decoration: none; margin-left: auto; }
-  .emergency {
-    margin-top: 9px; padding-top: 9px; border-top: 1px dashed var(--line);
-    font-size: 11.5px; color: var(--muted);
-  }
-  .emergency b { color: var(--text); font-weight: 600; }
-  .emergency span { margin-right: 12px; white-space: nowrap; }
+  .toggles { display:flex; flex-wrap:wrap; gap:6px; margin:12px 0 4px; }
+  .toggle { font-size:11.5px; padding:5px 9px; border:1px solid var(--line); border-radius:20px; color:var(--muted); cursor:pointer; user-select:none; }
+  .toggle.on { color:var(--text); border-color:var(--accent); background:rgba(91,157,255,.08); }
+  .toggle .swatch { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:5px; vertical-align:middle; }
 
-  .legend {
-    position: absolute; bottom: 14px; right: 14px; z-index: 500;
-    background: rgba(18,21,28,.92); border: 1px solid var(--line);
-    border-radius: 9px; padding: 10px 12px; font-size: 11.5px; color: var(--muted);
-    backdrop-filter: blur(6px);
-  }
-  .legend .lr { display: flex; align-items: center; gap: 7px; margin: 3px 0; }
-  .legend .sw { width: 10px; height: 10px; border-radius: 50%; }
-  .maptext a { color: var(--accent); }
-  .footnote { font-size: 11px; color: var(--muted); margin-top: 14px; line-height: 1.5; }
-  .footnote a { color: var(--accent); }
+  .divider { height:1px; background:var(--line-soft); margin:16px 0; }
+  .results-head { font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:0 0 10px; font-weight:600; display:flex; justify-content:space-between; }
+
+  .stop { border:1px solid var(--line); border-radius:10px; padding:12px 13px; margin-bottom:10px; background:var(--panel-2); cursor:pointer; transition:border-color .15s; }
+  .stop:hover { border-color:#33404f; }
+  .stop.active { border-color:var(--accent); }
+  .stop-top { display:flex; align-items:center; gap:9px; }
+  .stop-flag { font-size:18px; line-height:1; }
+  .stop-name { font-weight:600; font-size:13.5px; }
+  .stop-dates { color:var(--muted); font-size:11.5px; margin-left:auto; white-space:nowrap; }
+
+  .risk-bar { height:6px; border-radius:4px; background:var(--panel-3); margin:10px 0 6px; overflow:hidden; }
+  .risk-fill { height:100%; border-radius:4px; }
+  .risk-line { display:flex; align-items:center; gap:8px; font-size:12px; }
+  .risk-score { font-weight:700; font-variant-numeric:tabular-nums; font-size:15px; }
+  .risk-label { color:var(--muted); }
+
+  .haz-row { display:flex; align-items:baseline; gap:8px; font-size:12px; padding:4px 0 0; color:var(--muted); }
+  .haz-row .ic { width:16px; text-align:center; }
+  .haz-row .mag { font-weight:700; font-variant-numeric:tabular-nums; min-width:40px; }
+  .haz-row a { color:var(--accent); text-decoration:none; margin-left:auto; }
+  .mag-warn { color:var(--warn); } .mag-danger { color:var(--danger); }
+  .emergency { margin-top:9px; padding-top:9px; border-top:1px dashed var(--line); font-size:11.5px; color:var(--muted); }
+  .emergency b { color:var(--text); font-weight:600; } .emergency span { margin-right:12px; white-space:nowrap; }
+
+  .legend { position:absolute; bottom:14px; right:14px; z-index:500; background:rgba(18,21,28,.92); border:1px solid var(--line); border-radius:9px; padding:10px 12px; font-size:11.5px; color:var(--muted); backdrop-filter:blur(6px); }
+  .legend .lr { display:flex; align-items:center; gap:7px; margin:3px 0; }
+  .legend .sw { width:10px; height:10px; border-radius:50%; }
+  .footnote { font-size:11px; color:var(--muted-2); margin-top:14px; line-height:1.5; }
+  .footnote a { color:var(--muted); }
+
+  .timeline { flex:0 0 auto; border-top:1px solid var(--line); background:var(--panel); padding:12px 16px 14px; overflow-x:auto; }
+  .timeline-head { font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:0 0 10px; font-weight:600; }
+  .tl-track { display:flex; gap:0; align-items:stretch; min-height:54px; }
+  .tl-stop { border:1px solid var(--line); border-radius:8px; padding:8px 12px; margin-right:8px; min-width:130px; background:var(--panel-2); position:relative; cursor:pointer; }
+  .tl-stop:hover { border-color:#33404f; }
+  .tl-stop .n { font-weight:600; font-size:12.5px; }
+  .tl-stop .d { font-size:10.5px; color:var(--muted); margin-top:2px; }
+  .tl-stop .risk-pill { position:absolute; top:8px; right:10px; font-size:10px; font-weight:700; padding:1px 6px; border-radius:10px; }
+  .tl-empty { color:var(--muted-2); font-size:12px; padding:16px 0; }
+  .modal-bg { display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:1000; align-items:center; justify-content:center; }
+  .modal-bg.on { display:flex; }
+  .modal { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:20px; width:440px; max-width:92vw; }
+  .modal h3 { margin:0 0 12px; font-size:15px; }
+  .modal p { font-size:13px; color:var(--muted); }
+  .modal .urlbox { width:100%; margin:10px 0; font-family:ui-monospace,Menlo,monospace; font-size:11.5px; }
+  .modal .row2 { display:flex; gap:10px; margin-top:8px; }
 </style>
 </head>
 <body>
 <div class="topbar">
   <h1>🌐 Seismic Trip Radar</h1>
-  <span class="tag">Plan around earthquake risk before you travel — per stop, per date.</span>
+  <span class="tag">Multi-hazard risk for your itinerary — before you go.</span>
+  <span class="spacer"></span>
+  <button class="mini" id="shareBtn">Share link</button>
+  <button class="mini" id="exportBtn">Export</button>
 </div>
 
 <div class="layout">
@@ -128,98 +115,138 @@
       <textarea id="itin" spellcheck="false">Tokyo, Japan; 2026-09-10; 2026-09-15
 Mexico City, Mexico; 2026-09-16; 2026-09-20
 Reykjavik, Iceland; 2026-09-21; 2026-09-25</textarea>
-      <div class="hint"><code>Place; arrive; depart</code> (YYYY-MM-DD). Dates optional — bare place scans the next 30 days.</div>
+      <div class="hint"><code>Place; arrive; depart</code> (YYYY-MM-DD). Dates optional.</div>
 
       <div class="controls">
-        <div>
-          <label for="minmag">Min magnitude</label>
-          <input id="minmag" type="number" step="0.1" value="4.5">
-        </div>
-        <div>
-          <label for="radius">Radius (km)</label>
-          <input id="radius" type="number" step="10" value="300">
-        </div>
+        <div><label for="minmag">Min magnitude</label><input id="minmag" type="number" step="0.1" value="4.5"></div>
+        <div><label for="radius">Radius (km)</label><input id="radius" type="number" step="10" value="300"></div>
       </div>
-      <button id="run">Scan itinerary</button>
+
+      <label>Hazard layers</label>
+      <div class="toggles" id="toggles">
+        <span class="toggle on" data-h="quake"><span class="swatch" style="background:var(--warn)"></span>Earthquakes</span>
+        <span class="toggle on" data-h="volcano"><span class="swatch" style="background:var(--volcano)"></span>Volcanoes</span>
+        <span class="toggle on" data-h="weather"><span class="swatch" style="background:var(--accent)"></span>Severe weather</span>
+        <span class="toggle on" data-h="advisory"><span class="swatch" style="background:var(--danger)"></span>Travel advisory</span>
+      </div>
+
+      <button id="run" style="margin-top:14px;">Scan itinerary</button>
       <div class="status" id="status"></div>
 
       <div class="divider"></div>
-      <div class="results-head">Stops</div>
+      <div class="results-head"><span>Stops</span><span id="tripScore"></span></div>
       <div id="results"></div>
 
       <div class="footnote">
-        Quakes: <a href="https://earthquake.usgs.gov/fdsnws/event/1/" target="_blank" rel="noopener">USGS</a> ·
-        Geocoding © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> ·
-        Country data <a href="https://restcountries.com/" target="_blank" rel="noopener">REST Countries</a>.
-        Emergency numbers are best-effort — always verify locally.
+        Data: <a href="https://earthquake.usgs.gov/fdsnws/event/1/" target="_blank" rel="noopener">USGS quakes</a>,
+        <a href="https://volcanoes.usgs.gov/vsc/api/volcanoApi/" target="_blank" rel="noopener">USGS volcanoes</a>,
+        <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a>,
+        <a href="https://www.traveladvisory.io/" target="_blank" rel="noopener">Travel Advisory</a>.
+        Geocoding © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>, tiles <a href="https://openfreemap.org/" target="_blank" rel="noopener">OpenFreeMap</a>.
+        Emergency numbers best-effort — verify locally. Shows recent/current data, not predictions.
       </div>
     </div>
   </aside>
 
-  <div id="map" style="position:relative;">
-    <div class="legend">
-      <div class="lr"><span class="sw" style="background:var(--accent)"></span> Trip stop</div>
-      <div class="lr"><span class="sw" style="background:var(--warn)"></span> Quake M4.5–5.9</div>
-      <div class="lr"><span class="sw" style="background:var(--danger)"></span> Quake M6+</div>
+  <div class="rightpane">
+    <div id="map">
+      <div class="legend">
+        <div class="lr"><span class="sw" style="background:var(--accent)"></span> Trip stop</div>
+        <div class="lr"><span class="sw" style="background:var(--warn)"></span> Quake M4.5–5.9</div>
+        <div class="lr"><span class="sw" style="background:var(--danger)"></span> Quake M6+</div>
+        <div class="lr"><span class="sw" style="background:var(--volcano)"></span> Elevated volcano</div>
+      </div>
+    </div>
+    <div class="timeline">
+      <div class="timeline-head">Trip timeline</div>
+      <div class="tl-track" id="timeline"><div class="tl-empty">Scan an itinerary to see stops and risk over time.</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <h3 id="modalTitle">Share this trip</h3>
+    <p id="modalDesc">Anyone with this link sees the same itinerary and settings.</p>
+    <input class="urlbox" id="modalUrl" readonly>
+    <div class="row2">
+      <button id="modalCopy">Copy</button>
+      <button class="mini" id="modalClose" style="flex:0 0 auto;">Close</button>
     </div>
   </div>
 </div>
 
 <script>
-// ---------- Bundled emergency numbers (best-effort; REST Countries doesn't carry these) ----------
 const EMERGENCY = {
-  JP:{p:"110",a:"119",f:"119"}, MX:{g:"911"}, IS:{g:"112"}, US:{g:"911"}, CA:{g:"911"},
-  GB:{g:"999",alt:"112"}, FR:{g:"112",p:"17",a:"15",f:"18"}, DE:{g:"112",p:"110"},
-  IT:{g:"112"}, ES:{g:"112"}, CL:{p:"133",a:"131",f:"132"}, PE:{g:"105"},
-  ID:{g:"112",p:"110",a:"118"}, PH:{g:"911"}, NZ:{g:"111"}, TR:{g:"112"}, GR:{g:"112"},
-  NP:{p:"100",a:"102",f:"101"}, IN:{g:"112"}, CN:{p:"110",a:"120",f:"119"},
-  TW:{p:"110",a:"119",f:"119"}, EC:{g:"911"}, CR:{g:"911"}, GT:{g:"110"},
-  IR:{p:"110",a:"115",f:"125"}, PK:{g:"1122",p:"15"}, AF:{p:"119",a:"102"}
+  JP:{p:"110",a:"119",f:"119"},MX:{g:"911"},IS:{g:"112"},US:{g:"911"},CA:{g:"911"},
+  GB:{g:"999",alt:"112"},FR:{g:"112",p:"17",a:"15",f:"18"},DE:{g:"112",p:"110"},
+  IT:{g:"112"},ES:{g:"112"},CL:{p:"133",a:"131",f:"132"},PE:{g:"105"},
+  ID:{g:"112",p:"110",a:"118"},PH:{g:"911"},NZ:{g:"111"},TR:{g:"112"},GR:{g:"112"},
+  NP:{p:"100",a:"102",f:"101"},IN:{g:"112"},CN:{p:"110",a:"120",f:"119"},
+  TW:{p:"110",a:"119",f:"119"},EC:{g:"911"},CR:{g:"911"},GT:{g:"110"},
+  IR:{p:"110",a:"115",f:"125"},PK:{g:"1122",p:"15"},AF:{p:"119",a:"102"}
 };
 
-const $ = (id) => document.getElementById(id);
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const geoCache = new Map(), countryCache = new Map();
+const $ = (id)=>document.getElementById(id);
+const sleep=(ms)=>new Promise(r=>setTimeout(r,ms));
+const geoCache=new Map(),countryCache=new Map();
+let volcanoCache=null;
+const activeHazards={quake:true,volcano:true,weather:true,advisory:true};
+let lastScan=[];
 
-// ----- Map setup -----
-const map = L.map("map", { zoomControl: true, attributionControl: true }).setView([20, 0], 2);
-L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
-  attribution: '© OpenStreetMap © CARTO', subdomains: "abcd", maxZoom: 19
-}).addTo(map);
-let layerGroup = L.layerGroup().addTo(map);
-const stopMarkers = {}; // index -> marker
+const map=L.map("map",{zoomControl:true,attributionControl:true}).setView([20,0],2);
+const primaryTiles=L.tileLayer("https://tiles.openfreemap.org/styles/dark/{z}/{x}/{y}.png",{
+  attribution:'© OpenFreeMap © OpenStreetMap contributors',maxZoom:19
+});
+primaryTiles.on("tileerror",()=>{
+  if(!map.hasLayer(fallbackTiles)){ map.addLayer(fallbackTiles); map.removeLayer(primaryTiles); }
+});
+const fallbackTiles=L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{
+  attribution:'© OpenStreetMap contributors',maxZoom:19
+});
+primaryTiles.addTo(map);
+let layerGroup=L.layerGroup().addTo(map);
+const stopMarkers={};
 
-function setStatus(m){ $("status").textContent = m; }
+function setStatus(m){ $("status").textContent=m; }
+
+document.querySelectorAll(".toggle").forEach(t=>{
+  t.addEventListener("click",()=>{
+    const h=t.getAttribute("data-h");
+    activeHazards[h]=!activeHazards[h];
+    t.classList.toggle("on",activeHazards[h]);
+  });
+});
 
 function parseItinerary(text){
-  const stops = [];
-  for (const raw of text.split("\n")){
-    const line = raw.trim(); if (!line) continue;
-    const p = line.split(";").map(s=>s.trim());
-    if (!p[0]) continue;
-    stops.push({ place:p[0], arrive:p[1]||null, depart:p[2]||null });
+  const stops=[];
+  for(const raw of text.split("\n")){
+    const line=raw.trim(); if(!line) continue;
+    const p=line.split(";").map(s=>s.trim());
+    if(!p[0]) continue;
+    stops.push({place:p[0],arrive:p[1]||null,depart:p[2]||null});
   }
   return stops;
 }
 
 function distanceKm(la1,lo1,la2,lo2){
-  const R=6371, r=d=>d*Math.PI/180;
-  const dLa=r(la2-la1), dLo=r(lo2-lo1);
-  const a=Math.sin(dLa/2)**2 + Math.cos(r(la1))*Math.cos(r(la2))*Math.sin(dLo/2)**2;
+  const R=6371,r=d=>d*Math.PI/180;
+  const dLa=r(la2-la1),dLo=r(lo2-lo1);
+  const a=Math.sin(dLa/2)**2+Math.cos(r(la1))*Math.cos(r(la2))*Math.sin(dLo/2)**2;
   return 2*R*Math.asin(Math.sqrt(a));
 }
 
 async function geocode(place){
-  if (geoCache.has(place)) return geoCache.get(place);
+  if(geoCache.has(place)) return geoCache.get(place);
   const url="https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&addressdetails=1&q="+encodeURIComponent(place);
   const res=await fetch(url,{headers:{"Accept":"application/json"}});
   if(!res.ok) throw new Error("Nominatim "+res.status);
   const d=await res.json();
   if(!d.length){ geoCache.set(place,null); return null; }
   const h=d[0];
-  const out={ lat:parseFloat(h.lat), lon:parseFloat(h.lon), displayName:h.display_name,
+  const out={lat:parseFloat(h.lat),lon:parseFloat(h.lon),displayName:h.display_name,
     countryCode:(h.address&&h.address.country_code)?h.address.country_code.toUpperCase():null,
-    countryName:h.address?h.address.country:null };
+    countryName:h.address?h.address.country:null};
   geoCache.set(place,out); return out;
 }
 
@@ -227,11 +254,10 @@ async function getCountry(code){
   if(!code) return null;
   if(countryCache.has(code)) return countryCache.get(code);
   try{
-    const url="https://restcountries.com/v3.1/alpha/"+encodeURIComponent(code)+"?fields=flag,idd,name";
-    const res=await fetch(url); if(!res.ok) throw new Error("RC "+res.status);
+    const res=await fetch("https://restcountries.com/v3.1/alpha/"+encodeURIComponent(code)+"?fields=flag,idd,name");
+    if(!res.ok) throw 0;
     const d=await res.json(); const c=Array.isArray(d)?d[0]:d;
-    const cc=c.idd&&c.idd.root?c.idd.root+(c.idd.suffixes&&c.idd.suffixes.length===1?c.idd.suffixes[0]:""):null;
-    const out={ flag:c.flag||"🏳️", callingCode:cc, name:c.name&&c.name.common };
+    const out={flag:c.flag||"🏳️",name:c.name&&c.name.common};
     countryCache.set(code,out); return out;
   }catch(e){ countryCache.set(code,null); return null; }
 }
@@ -241,81 +267,183 @@ function windowFor(stop){
   if(stop.arrive){
     start=new Date(stop.arrive+"T00:00:00Z");
     end=stop.depart?new Date(stop.depart+"T23:59:59Z"):new Date(start.getTime()+3*864e5);
-  } else { start=now; end=new Date(now.getTime()+30*864e5); }
-  return { start:start.toISOString(), end:end.toISOString() };
+  }else{ start=now; end=new Date(now.getTime()+30*864e5); }
+  return {start:start.toISOString(),end:end.toISOString()};
 }
 
 async function queryQuakes(lat,lon,radiusKm,minMag,win){
   const url="https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson"+
-    "&latitude="+lat+"&longitude="+lon+"&maxradiuskm="+radiusKm+
-    "&minmagnitude="+minMag+"&starttime="+encodeURIComponent(win.start)+
-    "&endtime="+encodeURIComponent(win.end)+"&orderby=magnitude";
+    "&latitude="+lat+"&longitude="+lon+"&maxradiuskm="+radiusKm+"&minmagnitude="+minMag+
+    "&starttime="+encodeURIComponent(win.start)+"&endtime="+encodeURIComponent(win.end)+"&orderby=magnitude";
   const res=await fetch(url); if(!res.ok) throw new Error("USGS "+res.status);
   const d=await res.json(); return d.features||[];
 }
 
+async function getVolcanoes(){
+  if(volcanoCache) return volcanoCache;
+  try{
+    const res=await fetch("https://volcanoes.usgs.gov/vsc/api/volcanoApi/elevated");
+    if(!res.ok) throw 0;
+    volcanoCache=await res.json();
+  }catch(e){ volcanoCache=[]; }
+  return volcanoCache;
+}
+function nearbyVolcanoes(list,lat,lon,radiusKm){
+  const out=[];
+  for(const v of (list||[])){
+    const vlat=parseFloat(v.latitude??v.lat), vlon=parseFloat(v.longitude??v.lon);
+    if(isNaN(vlat)||isNaN(vlon)) continue;
+    const dist=distanceKm(lat,lon,vlat,vlon);
+    if(dist<=radiusKm) out.push({name:v.volcanoName||v.vName||v.name||"Volcano",color:(v.colorCode||v.alertLevel||"").toString().toUpperCase(),lat:vlat,lon:vlon,dist:Math.round(dist)});
+  }
+  return out.sort((a,b)=>a.dist-b.dist);
+}
+
+async function getWeatherRisk(lat,lon,win){
+  try{
+    const s=win.start.slice(0,10), e=win.end.slice(0,10);
+    const url="https://api.open-meteo.com/v1/forecast?latitude="+lat+"&longitude="+lon+
+      "&daily=weather_code,wind_speed_10m_max,precipitation_sum&timezone=auto&start_date="+s+"&end_date="+e;
+    const res=await fetch(url); if(!res.ok) throw 0;
+    const d=await res.json(); const daily=d.daily||{};
+    const codes=daily.weather_code||[], winds=daily.wind_speed_10m_max||[], precip=daily.precipitation_sum||[];
+    let severe=0, maxWind=0, maxPrecip=0, worst="";
+    const severeCodes={95:"Thunderstorm",96:"Thunderstorm w/ hail",99:"Severe thunderstorm",82:"Violent rain",75:"Heavy snow",86:"Heavy snow showers",65:"Heavy rain",67:"Heavy freezing rain"};
+    codes.forEach((c,i)=>{
+      if(severeCodes[c]){ severe++; worst=severeCodes[c]; }
+      if(winds[i]>maxWind) maxWind=winds[i];
+      if(precip[i]>maxPrecip) maxPrecip=precip[i];
+    });
+    if(maxWind>=60 && !worst) worst="High winds "+Math.round(maxWind)+" km/h";
+    return {severeDays:severe,maxWind:Math.round(maxWind),maxPrecip:Math.round(maxPrecip),worst,hasData:codes.length>0};
+  }catch(e){ return {severeDays:0,maxWind:0,maxPrecip:0,worst:"",hasData:false}; }
+}
+
+async function getAdvisory(code){
+  if(!code) return null;
+  try{
+    const res=await fetch("https://www.traveladvisory.io/api/countries/"+code.toLowerCase());
+    if(!res.ok) throw 0;
+    const d=await res.json();
+    const rec=d && d.data ? (d.data[code.toUpperCase()]||Object.values(d.data)[0]) : null;
+    if(rec&&rec.advisory) return {score:rec.advisory.score,message:rec.advisory.message,updated:rec.advisory.updated};
+  }catch(e){}
+  return null;
+}
+
+function computeRisk(quakes,volcanoes,weather,advisory){
+  let score=0; const parts=[];
+  if(activeHazards.quake && quakes.length){
+    const maxMag=Math.max(...quakes.map(q=>q.properties.mag||0));
+    const q=Math.min(45, (maxMag-3)*12 + Math.min(quakes.length,6)*2);
+    score+=q; parts.push("quakes");
+  }
+  if(activeHazards.volcano && volcanoes.length){
+    const red=volcanoes.some(v=>v.color==="RED"||v.color==="WARNING");
+    const v=red?30:18; score+=v; parts.push("volcano");
+  }
+  if(activeHazards.weather && weather && weather.severeDays){
+    const w=Math.min(18, weather.severeDays*6); score+=w; parts.push("weather");
+  }
+  if(activeHazards.advisory && advisory && advisory.score){
+    const a=Math.min(25,(advisory.score/5)*25); score+=a; parts.push("advisory");
+  }
+  return {score:Math.min(100,Math.round(score)),parts};
+}
+function riskColor(s){ return s>=60?"var(--danger)":s>=30?"var(--warn)":"var(--ok)"; }
+function riskWord(s){ return s>=60?"High":s>=30?"Moderate":"Low"; }
+function fmtDate(ms){ return new Date(ms).toLocaleDateString(undefined,{month:"short",day:"numeric"}); }
+function magRadiusPx(m){ return Math.max(4,(m-3)*4); }
+
 function emergencyLine(code){
   const e=EMERGENCY[code]; if(!e) return null;
   const b=[];
-  if(e.g) b.push(`<span><b>All:</b> ${e.g}</span>`);
-  if(e.p) b.push(`<span><b>Police:</b> ${e.p}</span>`);
-  if(e.a) b.push(`<span><b>Ambulance:</b> ${e.a}</span>`);
-  if(e.f) b.push(`<span><b>Fire:</b> ${e.f}</span>`);
-  if(e.alt) b.push(`<span><b>Alt:</b> ${e.alt}</span>`);
+  if(e.g)b.push(`<span><b>All:</b> ${e.g}</span>`); if(e.p)b.push(`<span><b>Police:</b> ${e.p}</span>`);
+  if(e.a)b.push(`<span><b>Ambulance:</b> ${e.a}</span>`); if(e.f)b.push(`<span><b>Fire:</b> ${e.f}</span>`);
+  if(e.alt)b.push(`<span><b>Alt:</b> ${e.alt}</span>`);
   return b.join("");
 }
-function fmtDate(ms){ return new Date(ms).toLocaleDateString(undefined,{month:"short",day:"numeric"}); }
 
-function magRadiusPx(m){ return Math.max(4, (m-3)*4); }
-
-function renderStopCard(i, stop, geo, country, quakes, radiusKm){
+function renderStopCard(i,stop,geo,country,data){
   if(!geo){
-    return `<div class="stop" data-i="${i}"><div class="stop-top">
-      <span class="stop-flag">⚠️</span><span class="stop-name">${stop.place}</span></div>
-      <div class="stop-verdict"><span class="dot gray"></span>Couldn't geocode — check spelling.</div></div>`;
+    return `<div class="stop" data-i="${i}"><div class="stop-top"><span class="stop-flag">⚠️</span>
+      <span class="stop-name">${stop.place}</span></div>
+      <div class="haz-row">Couldn't geocode — check spelling.</div></div>`;
   }
-  const flag = country&&country.flag?country.flag:"📍";
-  const dates = stop.arrive?`${fmtDate(new Date(stop.arrive))}${stop.depart?"–"+fmtDate(new Date(stop.depart)):""}`:"next 30d";
-  let verdict, quakeHtml="";
-  if(!quakes.length){
-    verdict=`<span class="dot ok"></span>Clear — no M${$("minmag").value}+ within ${radiusKm} km`;
-  } else {
-    const maxMag=Math.max(...quakes.map(q=>q.properties.mag||0));
-    const cls=maxMag>=6?"danger":"warn";
-    verdict=`<span class="dot ${cls}"></span>${quakes.length} quake${quakes.length>1?"s":""}, up to M${maxMag.toFixed(1)}`;
-    quakeHtml = quakes.slice(0,4).map(q=>{
-      const p=q.properties,c=q.geometry.coordinates;
-      const dist=Math.round(distanceKm(geo.lat,geo.lon,c[1],c[0]));
-      const big=p.mag>=6?"big":"";
-      return `<div class="quake-row ${big}"><span class="mag">M${p.mag.toFixed(1)}</span>
-        <span>${dist} km · ${fmtDate(p.time)}</span>
-        <a href="${p.url}" target="_blank" rel="noopener">detail →</a></div>`;
-    }).join("");
-    const em = emergencyLine(geo.countryCode);
-    if(em) quakeHtml += `<div class="emergency">📞 ${geo.countryName||geo.countryCode}: ${em}</div>`;
+  const flag=country&&country.flag?country.flag:"📍";
+  const dates=stop.arrive?`${fmtDate(new Date(stop.arrive))}${stop.depart?"–"+fmtDate(new Date(stop.depart)):""}`:"next 30d";
+  const {score,parts}=data.risk;
+  let rows="";
+  if(activeHazards.quake) for(const q of data.quakes.slice(0,3)){
+    const p=q.properties,c=q.geometry.coordinates,dist=Math.round(distanceKm(geo.lat,geo.lon,c[1],c[0]));
+    const cls=p.mag>=6?"mag-danger":"mag-warn";
+    rows+=`<div class="haz-row"><span class="ic">🌊</span><span class="mag ${cls}">M${p.mag.toFixed(1)}</span>
+      <span>${dist} km · ${fmtDate(p.time)}</span><a href="${p.url}" target="_blank" rel="noopener">detail →</a></div>`;
   }
+  if(activeHazards.volcano) for(const v of data.volcanoes.slice(0,2)){
+    rows+=`<div class="haz-row"><span class="ic">🌋</span><span class="mag" style="color:var(--volcano)">${v.color||"ELEV"}</span>
+      <span>${v.name} · ${v.dist} km</span></div>`;
+  }
+  if(activeHazards.weather && data.weather && data.weather.worst){
+    rows+=`<div class="haz-row"><span class="ic">🌧️</span><span class="mag" style="color:var(--accent)">WX</span>
+      <span>${data.weather.worst}${data.weather.severeDays>1?` · ${data.weather.severeDays} days`:""}</span></div>`;
+  }
+  if(activeHazards.advisory && data.advisory && data.advisory.score){
+    rows+=`<div class="haz-row"><span class="ic">🛂</span><span class="mag" style="color:var(--danger)">L${data.advisory.score.toFixed(1)}</span>
+      <span>${(data.advisory.message||"Advisory").slice(0,42)}</span></div>`;
+  }
+  if(!rows) rows=`<div class="haz-row"><span class="ic">✓</span><span style="color:var(--ok)">No active hazards found in your window.</span></div>`;
+  const em=emergencyLine(geo.countryCode);
+  const emHtml=em?`<div class="emergency">📞 ${geo.countryName||geo.countryCode}: ${em}</div>`:"";
   return `<div class="stop" data-i="${i}">
-    <div class="stop-top"><span class="stop-flag">${flag}</span>
-      <span class="stop-name">${stop.place.split(",")[0]}</span>
+    <div class="stop-top"><span class="stop-flag">${flag}</span><span class="stop-name">${stop.place.split(",")[0]}</span>
       <span class="stop-dates">${dates}</span></div>
-    <div class="stop-verdict">${verdict}</div>${quakeHtml}</div>`;
+    <div class="risk-bar"><div class="risk-fill" style="width:${score}%;background:${riskColor(score)}"></div></div>
+    <div class="risk-line"><span class="risk-score" style="color:${riskColor(score)}">${score}</span>
+      <span class="risk-label">${riskWord(score)} risk</span></div>
+    ${rows}${emHtml}</div>`;
 }
 
-function drawStop(i, geo, quakes, radiusKm){
+function drawStop(i,geo,data,radiusKm){
   if(!geo) return;
-  L.circle([geo.lat,geo.lon],{ radius:radiusKm*1000, color:"#5b9dff",
-    weight:1, opacity:.4, fillColor:"#5b9dff", fillOpacity:.05 }).addTo(layerGroup);
-  const m=L.circleMarker([geo.lat,geo.lon],{ radius:7, color:"#5b9dff",
-    weight:2, fillColor:"#5b9dff", fillOpacity:.9 }).addTo(layerGroup);
-  m.bindPopup(`<b>${geo.displayName.split(",").slice(0,2).join(", ")}</b>`);
+  L.circle([geo.lat,geo.lon],{radius:radiusKm*1000,color:"#5b9dff",weight:1,opacity:.4,fillColor:"#5b9dff",fillOpacity:.05}).addTo(layerGroup);
+  const m=L.circleMarker([geo.lat,geo.lon],{radius:7,color:"#5b9dff",weight:2,fillColor:"#5b9dff",fillOpacity:.9}).addTo(layerGroup);
+  m.bindPopup(`<b>${geo.displayName.split(",").slice(0,2).join(", ")}</b><br>Risk ${data.risk.score}/100`);
   stopMarkers[i]=m;
-  for(const q of quakes){
-    const c=q.geometry.coordinates, mag=q.properties.mag||0;
-    const col=mag>=6?"#ff5d5d":"#f0a92b";
-    L.circleMarker([c[1],c[0]],{ radius:magRadiusPx(mag), color:col, weight:1.5,
-      fillColor:col, fillOpacity:.35 }).addTo(layerGroup)
-      .bindPopup(`<b>M${mag.toFixed(1)}</b><br>${q.properties.place||""}`);
+  if(activeHazards.quake) for(const q of data.quakes){
+    const c=q.geometry.coordinates,mag=q.properties.mag||0,col=mag>=6?"#ff5d5d":"#f0a92b";
+    L.circleMarker([c[1],c[0]],{radius:magRadiusPx(mag),color:col,weight:1.5,fillColor:col,fillOpacity:.35})
+      .addTo(layerGroup).bindPopup(`<b>M${mag.toFixed(1)}</b><br>${q.properties.place||""}`);
   }
+  if(activeHazards.volcano) for(const v of data.volcanoes){
+    L.circleMarker([v.lat,v.lon],{radius:6,color:"#ff8a4c",weight:2,fillColor:"#ff8a4c",fillOpacity:.4})
+      .addTo(layerGroup).bindPopup(`<b>🌋 ${v.name}</b><br>${v.color||"Elevated"} · ${v.dist} km`);
+  }
+}
+
+function renderTimeline(scan){
+  const tl=$("timeline");
+  if(!scan.length){ tl.innerHTML=`<div class="tl-empty">Scan an itinerary to see stops and risk over time.</div>`; return; }
+  tl.innerHTML=scan.map((s,i)=>{
+    if(!s.geo) return "";
+    const score=s.data.risk.score;
+    const dates=s.stop.arrive?`${fmtDate(new Date(s.stop.arrive))}${s.stop.depart?"–"+fmtDate(new Date(s.stop.depart)):""}`:"next 30d";
+    return `<div class="tl-stop" data-i="${i}">
+      <span class="risk-pill" style="background:${riskColor(score)};color:#04111f">${score}</span>
+      <div class="n">${(s.country&&s.country.flag||"")} ${s.stop.place.split(",")[0]}</div>
+      <div class="d">${dates}</div></div>`;
+  }).join("");
+  tl.querySelectorAll(".tl-stop").forEach(el=>{
+    el.addEventListener("click",()=>flyToStop(el.getAttribute("data-i")));
+  });
+}
+
+function flyToStop(i){
+  document.querySelectorAll(".stop").forEach(s=>s.classList.remove("active"));
+  const card=document.querySelector(`.stop[data-i="${i}"]`);
+  if(card){ card.classList.add("active"); card.scrollIntoView({behavior:"smooth",block:"nearest"}); }
+  const m=stopMarkers[i];
+  if(m){ map.flyTo(m.getLatLng(),6,{duration:.6}); m.openPopup(); }
 }
 
 async function run(){
@@ -327,42 +455,103 @@ async function run(){
   const radiusKm=parseFloat($("radius").value)||300;
   if(!stops.length){ setStatus("Add at least one stop."); btn.disabled=false; return; }
 
-  const bounds=[];
-  let firstGeocode=true;
+  const volcanoes=activeHazards.volcano?await getVolcanoes():[];
+  const scan=[]; const bounds=[]; let firstGeocode=true; let sum=0,count=0;
   for(let i=0;i<stops.length;i++){
     const stop=stops[i];
     setStatus(`Checking ${i+1}/${stops.length}: ${stop.place}…`);
     try{
       if(!geoCache.has(stop.place)){ if(!firstGeocode) await sleep(1100); firstGeocode=false; }
       const geo=await geocode(stop.place);
-      let country=null,quakes=[];
+      let country=null,data={quakes:[],volcanoes:[],weather:null,advisory:null,risk:{score:0,parts:[]}};
       if(geo){
+        const win=windowFor(stop);
         country=await getCountry(geo.countryCode);
-        quakes=await queryQuakes(geo.lat,geo.lon,radiusKm,minMag,windowFor(stop));
-        drawStop(i,geo,quakes,radiusKm);
-        bounds.push([geo.lat,geo.lon]);
+        const [q,w,adv]=await Promise.all([
+          activeHazards.quake?queryQuakes(geo.lat,geo.lon,radiusKm,minMag,win):Promise.resolve([]),
+          activeHazards.weather?getWeatherRisk(geo.lat,geo.lon,win):Promise.resolve(null),
+          activeHazards.advisory?getAdvisory(geo.countryCode):Promise.resolve(null)
+        ]);
+        const vnear=activeHazards.volcano?nearbyVolcanoes(volcanoes,geo.lat,geo.lon,radiusKm):[];
+        data={quakes:q,volcanoes:vnear,weather:w,advisory:adv,risk:computeRisk(q,vnear,w,adv)};
+        drawStop(i,geo,data,radiusKm); bounds.push([geo.lat,geo.lon]);
+        sum+=data.risk.score; count++;
       }
-      $("results").insertAdjacentHTML("beforeend", renderStopCard(i,stop,geo,country,quakes,radiusKm));
+      scan.push({stop,geo,country,data});
+      $("results").insertAdjacentHTML("beforeend",renderStopCard(i,stop,geo,country,data));
     }catch(e){
+      scan.push({stop,geo:null,country:null,data:{risk:{score:0}}});
       $("results").insertAdjacentHTML("beforeend",
-        `<div class="stop"><div class="stop-verdict"><span class="dot gray"></span>${stop.place}: ${e.message}</div></div>`);
+        `<div class="stop"><div class="haz-row">${stop.place}: ${e.message}</div></div>`);
     }
   }
-  if(bounds.length) map.fitBounds(bounds,{ padding:[60,60], maxZoom:6 });
+  if(bounds.length) map.fitBounds(bounds,{padding:[60,60],maxZoom:6});
+  lastScan=scan; renderTimeline(scan);
+  $("tripScore").textContent=count?`avg risk ${Math.round(sum/count)}`:"";
   setStatus(`Done — ${stops.length} stop(s) scanned.`);
   btn.disabled=false;
 
   document.querySelectorAll(".stop[data-i]").forEach(el=>{
-    el.addEventListener("click",()=>{
-      document.querySelectorAll(".stop").forEach(s=>s.classList.remove("active"));
-      el.classList.add("active");
-      const i=el.getAttribute("data-i"); const m=stopMarkers[i];
-      if(m){ map.flyTo(m.getLatLng(),6,{duration:.6}); m.openPopup(); }
-    });
+    el.addEventListener("click",()=>flyToStop(el.getAttribute("data-i")));
   });
 }
+$("run").addEventListener("click",run);
 
-$("run").addEventListener("click", run);
+function encodeState(){
+  const state={i:$("itin").value,m:$("minmag").value,r:$("radius").value,h:activeHazards};
+  return btoa(encodeURIComponent(JSON.stringify(state)));
+}
+function decodeState(){
+  const p=new URLSearchParams(location.search).get("trip");
+  if(!p) return;
+  try{
+    const s=JSON.parse(decodeURIComponent(atob(p)));
+    if(s.i) $("itin").value=s.i;
+    if(s.m) $("minmag").value=s.m;
+    if(s.r) $("radius").value=s.r;
+    if(s.h){ Object.assign(activeHazards,s.h);
+      document.querySelectorAll(".toggle").forEach(t=>{const h=t.getAttribute("data-h");t.classList.toggle("on",!!activeHazards[h]);}); }
+    setTimeout(run,400);
+  }catch(e){}
+}
+function openModal(title,desc,url){
+  $("modalTitle").textContent=title; $("modalDesc").textContent=desc;
+  $("modalUrl").value=url; $("modalBg").classList.add("on");
+}
+$("shareBtn").addEventListener("click",()=>{
+  const url=location.origin+location.pathname+"?trip="+encodeState();
+  openModal("Share this trip","Anyone with this link sees the same itinerary and settings.",url);
+});
+$("modalClose").addEventListener("click",()=>$("modalBg").classList.remove("on"));
+$("modalBg").addEventListener("click",e=>{ if(e.target===$("modalBg")) $("modalBg").classList.remove("on"); });
+$("modalCopy").addEventListener("click",()=>{
+  const el=$("modalUrl"); el.select(); navigator.clipboard.writeText(el.value).catch(()=>document.execCommand("copy"));
+  $("modalCopy").textContent="Copied ✓"; setTimeout(()=>$("modalCopy").textContent="Copy",1500);
+});
+
+$("exportBtn").addEventListener("click",()=>{
+  if(!lastScan.length){ alert("Scan an itinerary first."); return; }
+  let md="# Seismic Trip Radar — risk summary\n\n";
+  for(const s of lastScan){
+    if(!s.geo){ md+=`## ${s.stop.place}\n- Could not geocode.\n\n`; continue; }
+    const r=s.data.risk.score;
+    md+=`## ${s.stop.place} — ${riskWord(r)} risk (${r}/100)\n`;
+    if(s.stop.arrive) md+=`- Dates: ${s.stop.arrive}${s.stop.depart?" to "+s.stop.depart:""}\n`;
+    if(s.data.quakes&&s.data.quakes.length) md+=`- Earthquakes: ${s.data.quakes.length}, up to M${Math.max(...s.data.quakes.map(q=>q.properties.mag||0)).toFixed(1)}\n`;
+    if(s.data.volcanoes&&s.data.volcanoes.length) md+=`- Volcanoes nearby: ${s.data.volcanoes.map(v=>v.name+" ("+v.color+")").join(", ")}\n`;
+    if(s.data.weather&&s.data.weather.worst) md+=`- Weather: ${s.data.weather.worst}\n`;
+    if(s.data.advisory&&s.data.advisory.score) md+=`- Travel advisory level: ${s.data.advisory.score.toFixed(1)}/5\n`;
+    const em=emergencyLine(s.geo.countryCode);
+    if(em) md+=`- Emergency: ${em.replace(/<[^>]+>/g,"").replace(/\s+/g," ").trim()}\n`;
+    md+="\n";
+  }
+  md+="_Generated by Seismic Trip Radar. Data is recent/current, not a prediction. Verify emergency numbers locally._\n";
+  const blob=new Blob([md],{type:"text/markdown"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+  a.download="trip-risk-summary.md"; a.click(); URL.revokeObjectURL(a.href);
+});
+
+decodeState();
 </script>
 </body>
 </html>
